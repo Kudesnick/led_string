@@ -47,6 +47,12 @@ typedef enum
 #define CONF_CLR(pin) (0xF << ((pin) << 2))
 #define CONF_SET(pin, conf) ((((conf) << 2) | GPIO_MODE_OUT50MHZ) << ((pin) << 2))
 
+#define BITBANDING_ADDR_CALC(ADDR, BYTE)       \
+    ((uint32_t)(ADDR) & 0xF0000000UL) +        \
+    (((uint32_t)(ADDR) & 0x00FFFFFFUL) << 5) + \
+    0x02000000UL + ((BYTE) << 2)
+#define BB_REG(ADDR, BYTE) (*(volatile uint32_t *)(BITBANDING_ADDR_CALC(ADDR, BYTE)))
+
 void csp_delay(const uint8_t del)
 {
     for (volatile uint32_t i = 0xFFF * del; i != 0; i--);
@@ -70,7 +76,7 @@ void csp_spi_nss_active()
 
 void csp_spi_nss_inactive()
 {
-    while (SPI1->SR & SPI_SR_BSY);
+    while (BB_REG(&(SPI1->SR), 7)); // SPI_SR_BSY
     NSS_PORT->BSRR = (1UL << NSS_PIN);
 }
 
@@ -78,7 +84,7 @@ void csp_spi_send(const uint8_t *data, const uint8_t len)
 {
     for (uint8_t i = 0; i < len; i++)
     {
-        while (!(SPI1->SR & SPI_SR_TXE));
+        while (!BB_REG(&(SPI1->SR), 1)); // SPI_SR_TXE
         SPI1->DR = data[i];
     }
 }
