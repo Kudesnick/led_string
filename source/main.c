@@ -14,9 +14,6 @@
 #include "csp.h"
 #include "max7219.h"
 
-/// @brief Переставлят байты в 4-байтном слове для отправки сообщения старшим битом вперед
-/// @example 0x12345678 -> 0x78563412
-#define REV(dw) __REV(dw)
 /// @brief Побитное зеркалирование 4-байтного слова
 /// @example 0x80000010 -> 0x08000001
 #define RBIT(dw) __RBIT(dw)
@@ -40,8 +37,7 @@ static void load_img()
 {
     for (uint8_t i = 0; i < STR_CNT; i++)
     {
-        uint32_t tmp = REV(img_buf[i].dw);
-        max7219_send_data(i + 1, tmp);
+        max7219_send_data(i + 1, img_buf[i].dw);
     }
     csp_delay(16);
 }
@@ -52,17 +48,10 @@ static void pulse(const uint8_t cnt)
 {
     for (uint8_t i = cnt; i > 0; i--)
     {
-        int8_t i = 1;
-
-        for (; i < 0x0F; i++)
+        for (uint8_t i = 1; i < 0x20; i++)
         {
-            max7219_send_cmd(MAX7219_BRIGHTNESS, i);
-            csp_delay(2);
-        }
-        for (; i >= 0x00; i--)
-        {
-            max7219_send_cmd(MAX7219_BRIGHTNESS, i);
-            csp_delay(4);
+            max7219_send_cmd(MAX7219_BRIGHTNESS, i ^ (0xF * (i >> 4)));
+            csp_delay(2 << (i >> 4));
         }
         csp_delay(200);
     }

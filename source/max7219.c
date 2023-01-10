@@ -33,7 +33,7 @@ void max7219_send_data(const uint8_t str, const uint32_t data)
 {
     csp_spi_nss_active();
 
-    for (uint8_t i = 0; i < MATRX_CNT; i++)
+    for (int8_t i = MATRX_CNT - 1; i >= 0; i--)
     {
         const uint8_t send[] = {str, ((uint8_t *)&data)[i]};
 
