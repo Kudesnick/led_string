@@ -15,29 +15,25 @@
 #include "max7219.h"
 #include "csp.h"
 
-void max7219_send_cmd(const max7219_cmd_t cmd, const uint8_t data)
+void max7219_send_cmd(const uint32_t cmd, const uint32_t data)
 {
-    const uint8_t send[] = {cmd, data};
-
     csp_spi_nss_active();
 
-    for (uint8_t i = 0; i < MATRX_CNT; i++)
+    for (uint32_t i = MATRX_CNT; i-- > 0;)
     {
-        csp_spi_send(send, sizeof(send));
+        csp_spi_send((cmd << 8) | data);
     }
 
     csp_spi_nss_inactive();
 }
 
-void max7219_send_data(const uint8_t str, const uint32_t data)
+void max7219_send_data(const uint32_t str, const uint32_t data)
 {
     csp_spi_nss_active();
 
-    for (int8_t i = MATRX_CNT - 1; i >= 0; i--)
+    for (int8_t i = MATRX_CNT; --i >= 0;)
     {
-        const uint8_t send[] = {str, ((uint8_t *)&data)[i]};
-
-        csp_spi_send(send, sizeof(send));
+        csp_spi_send((str << 8) | ((uint8_t *)&data)[i]);
     }
 
     csp_spi_nss_inactive();

@@ -14,9 +14,25 @@
 #include "csp.h"
 #include "max7219.h"
 
+#if(1)
 /// @brief Побитное зеркалирование 4-байтного слова
 /// @example 0x80000010 -> 0x08000001
 #define RBIT(dw) __RBIT(dw)
+#else
+uint32_t RBIT(uint32_t in)
+{
+    uint32_t result = 0;
+    
+    for (uint32_t i = 32; i; i--)
+    {
+        result <<= 1;
+        result |= (in & 1);
+        in >>= 1;
+    }
+
+    return result;
+}
+#endif
 
 /// Структура строки изображения
 typedef union
@@ -35,20 +51,20 @@ buf_str_t img_buf[STR_CNT];
 /// Загрузить изображение
 static void load_img()
 {
-    for (uint8_t i = 0; i < STR_CNT; i++)
+    for (uint32_t i = 0; ++i <= STR_CNT;)
     {
-        max7219_send_data(i + 1, img_buf[i].dw);
+        max7219_send_data(i, img_buf[i-1].dw);
     }
     csp_delay(16);
 }
 
 /// @brief Эффект пульсации (изменение яркости)
 /// @param cnt Количество пульсаций
-static void pulse(const uint8_t cnt)
+static void pulse(const uint32_t cnt)
 {
-    for (uint8_t i = cnt; i > 0; i--)
+    for (uint32_t i = cnt; i-- > 0;)
     {
-        for (uint8_t i = 1; i < 0x20; i++)
+        for (uint32_t i = 0; ++i < 0x20;)
         {
             max7219_send_cmd(MAX7219_BRIGHTNESS, i ^ (0xF * (i >> 4)));
             csp_delay(2 << (i >> 4));
@@ -61,7 +77,7 @@ static void pulse(const uint8_t cnt)
  *  @{ ********************************************************************************************/
 
 /// Сигнатура функции преобразования строки изображения
-typedef void(*step_t)(const uint8_t, const uint8_t);
+typedef void(*step_t)(const uint32_t, const uint32_t);
 
 /// @brief Применение функции преобразования к изображению
 /// @param j Количество кадров анимации
@@ -70,7 +86,7 @@ void step(int8_t j, step_t fn_p)
 {
     for (; j >= 0; j--)
     {
-        for (int8_t i = STR_CNT - 1; i >= 0; i--)
+        for (int32_t i = STR_CNT; --i >= 0;)
         {
             fn_p(i, j);
         }
@@ -82,7 +98,7 @@ void step(int8_t j, step_t fn_p)
 /// @brief Функция преобразования "одно сердце"
 /// @param i номер строки
 /// @param j номер кадра
-void one_heart(const uint8_t i, const uint8_t j)
+void one_heart(const uint32_t i, const uint32_t j)
 {
     uint32_t tmp = (uint16_t)heart[i] << 8 >> j;
     img_buf[i].dw = tmp | RBIT(tmp);
@@ -91,17 +107,16 @@ void one_heart(const uint8_t i, const uint8_t j)
 /// @brief Функция преобразования "два сердца"
 /// @param i номер строки
 /// @param j номер кадра
-void dbl_heart(const uint8_t i, const uint8_t j)
+void dbl_heart(const uint32_t i, const uint32_t j)
 {
-    uint32_t tmp = (uint16_t)heart[i] >> j;
-    tmp |= (uint32_t)heart[i] << (16 - j);
+    uint32_t tmp = ((uint32_t)heart[i] >> j) | (uint32_t)heart[i] << (16 - j);
     img_buf[i].dw = tmp | RBIT(tmp);
 }
 
 /// @brief Функция преобразования "слияние сердец"
 /// @param i номер строки
 /// @param j номер кадра
-void uni_heart(const uint8_t i, const uint8_t j)
+void uni_heart(const uint32_t i, const uint32_t j)
 {
     (void)j;
 
@@ -141,7 +156,7 @@ int main()
     step(7, uni_heart);
 
     // Заливка контурного "сердца"
-    for (uint8_t j = 1; j < 7; j++)
+    for (uint32_t j = 0; ++j < 7;)
     {
         img_buf[j].dw |= img_buf[j - 1].dw;
 

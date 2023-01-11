@@ -15,7 +15,7 @@
 
 /// @brief Синхронная задержка
 /// @param del Длительность задержки в условных единицах (примерно 7 мс)
-void csp_delay(const uint8_t del);
+void csp_delay(const uint32_t del);
 
 /// @brief Инициализация SPI модуля
 /// @details MODE_MASTER, CPOL0, CPHA0, MSB_LSB, DATA_8_BITS, SS software control
@@ -28,6 +28,5 @@ void csp_spi_nss_active();
 void csp_spi_nss_inactive();
 
 /// @brief Отправка цепочки данных по SPI
-/// @param data Указатель на буфер данных
-/// @param len Количество байт для передачи
-void csp_spi_send(const uint8_t *data, const uint8_t len);
+/// @param data Данные
+void csp_spi_send(const uint32_t data);

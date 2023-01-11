@@ -19,7 +19,7 @@
 #define STR_CNT (8) ///< Количество строк в матрице
 
 /// Управляющие команды MAX7219 SPI LED Driver
-typedef enum : uint8_t
+typedef enum : uint32_t
 {
     MAX7219_DECODE_MODE = 0x09, ///< Режим декодирования
     ///< (позволяет подключать знакосинтезирующие дисплеи)
@@ -32,9 +32,9 @@ typedef enum : uint8_t
 /// @brief Отправить команду на все матрицы
 /// @param cmd код команды
 /// @param data аргумент
-void max7219_send_cmd(const max7219_cmd_t cmd, const uint8_t data);
+void max7219_send_cmd(const max7219_cmd_t cmd, const uint32_t data);
 
 /// @brief Записать строку в матрицу
 /// @param str Номер строки 1..8
 /// @param data Данные (8*4 бит)
-void max7219_send_data(const uint8_t str, const uint32_t data);
+void max7219_send_data(const uint32_t str, const uint32_t data);

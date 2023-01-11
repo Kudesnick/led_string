@@ -53,9 +53,9 @@ typedef enum
     0x02000000UL + ((BYTE) << 2)
 #define BB_REG(ADDR, BYTE) (*(volatile uint32_t *)(BITBANDING_ADDR_CALC(ADDR, BYTE)))
 
-void csp_delay(const uint8_t del)
+void csp_delay(const uint32_t del)
 {
-    for (volatile uint32_t i = 0xFFF * del; i != 0; i--);
+    for (volatile uint32_t i = del << 12; --i;);
 }
 
 void csp_spi_init()
@@ -65,8 +65,8 @@ void csp_spi_init()
     GPIOA->CRL &= ~(CONF_CLR(NSS_PIN) | CONF_CLR(SCK_PIN) | CONF_CLR(MOSI_PIN));
     GPIOA->CRL |= CONF_SET(NSS_PIN, GPIO_OUT_PUSH_PULL) | CONF_SET(SCK_PIN, GPIO_AF_PUSHPULL) | CONF_SET(MOSI_PIN, GPIO_AF_PUSHPULL);
 
-    // SPI1 init MODE_MASTER, CPOL0, CPHA0, MSB_LSB, DATA_8_BITS, Max speed
-    SPI1->CR1 = SPI_CR1_MSTR | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_SPE;
+    // SPI1 init MODE_MASTER, CPOL0, CPHA0, MSB_LSB, DATA_16_BITS, Max speed
+    SPI1->CR1 = SPI_CR1_MSTR  | SPI_CR1_SSI | SPI_CR1_SSM | SPI_CR1_DFF | SPI_CR1_SPE;
 }
 
 void csp_spi_nss_active()
@@ -80,11 +80,8 @@ void csp_spi_nss_inactive()
     NSS_PORT->BSRR = (1UL << NSS_PIN);
 }
 
-void csp_spi_send(const uint8_t *data, const uint8_t len)
+void csp_spi_send(const uint32_t data)
 {
-    for (uint8_t i = 0; i < len; i++)
-    {
-        while (!BB_REG(&(SPI1->SR), 1)); // SPI_SR_TXE
-        SPI1->DR = data[i];
-    }
+    while (!BB_REG(&(SPI1->SR), 1)); // SPI_SR_TXE
+    SPI1->DR = data;
 }
