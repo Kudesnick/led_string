@@ -53,7 +53,8 @@ static void load_img()
 {
     for (uint32_t i = 0; ++i <= STR_CNT;)
     {
-        max7219_send_data(i, img_buf[i-1].dw);
+        const uint32_t tmp = img_buf[i-1].dw;
+        max7219_send_data(i, tmp | RBIT(tmp));
     }
     csp_delay(16);
 }
@@ -100,8 +101,7 @@ void step(int8_t j, step_t fn_p)
 /// @param j номер кадра
 void one_heart(const uint32_t i, const uint32_t j)
 {
-    uint32_t tmp = (uint16_t)heart[i] << 8 >> j;
-    img_buf[i].dw = tmp | RBIT(tmp);
+    img_buf[i].dw = (uint16_t)heart[i] << 8 >> j;
 }
 
 /// @brief Функция преобразования "два сердца"
@@ -109,8 +109,7 @@ void one_heart(const uint32_t i, const uint32_t j)
 /// @param j номер кадра
 void dbl_heart(const uint32_t i, const uint32_t j)
 {
-    uint32_t tmp = ((uint32_t)heart[i] >> j) | (uint32_t)heart[i] << (16 - j);
-    img_buf[i].dw = tmp | RBIT(tmp);
+    img_buf[i].dw = ((uint32_t)heart[i] >> j) | (uint32_t)heart[i] << (16 - j);
 }
 
 /// @brief Функция преобразования "слияние сердец"
