@@ -41,7 +41,7 @@ void csp_spi_init()
                     | ARM_SPI_CPOL0_CPHA0
                     | ARM_SPI_MSB_LSB
                     | ARM_SPI_SS_MASTER_SW
-                    | ARM_SPI_DATA_BITS(8),
+                    | ARM_SPI_DATA_BITS(16),
                     1000000);
 
     SPIdrv->Control(ARM_SPI_CONTROL_SS, ARM_SPI_SS_INACTIVE);
@@ -54,11 +54,12 @@ void csp_spi_nss_active()
 
 void csp_spi_nss_inactive()
 {
+    while (SPIdrv->GetStatus().busy);
     SPIdrv->Control(ARM_SPI_CONTROL_SS, ARM_SPI_SS_INACTIVE);
 }
 
-void csp_spi_send(const uint8_t *data, const uint8_t len)
+void csp_spi_send(const uint32_t data)
 {
-    SPIdrv->Send(data, len);
+    SPIdrv->Send(&data, 1);
     while (SPIdrv->GetStatus().busy);
 }
